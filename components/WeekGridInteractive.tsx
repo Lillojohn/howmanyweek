@@ -3,12 +3,19 @@ import { useMemo, useCallback, useRef } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import { lightTap, mediumTap } from "../utils/haptics";
 import type { Milestone } from "../utils/milestones";
+import {
+  type JournalStore,
+  type Category,
+  getAverageRating,
+  getCategoryRating,
+} from "../utils/journal";
 
 interface Props {
   weeksLived: number;
   totalWeeks: number;
-  journaledWeeks: Set<number>;
+  journalData: JournalStore;
   milestoneWeeks: Map<number, Milestone>;
+  categoryFilter: Category | null;
   onWeekPress: (weekIndex: number) => void;
   onWeekLongPress: (weekIndex: number) => void;
 }
@@ -26,8 +33,9 @@ const BOX_SIZE = Math.floor((AVAILABLE - GAP * (COLUMNS - 1)) / COLUMNS);
 export default function WeekGridInteractive({
   weeksLived,
   totalWeeks,
-  journaledWeeks,
+  journalData,
   milestoneWeeks,
+  categoryFilter,
   onWeekPress,
   onWeekLongPress,
 }: Props) {
@@ -40,17 +48,29 @@ export default function WeekGridInteractive({
   const totalYears = Math.ceil(totalWeeks / COLUMNS);
   const labelInterval = 10;
 
+  // Precompute a version key so useMemo can track journal changes
+  const journalVersion = Object.keys(journalData).length;
+
   const rows = useMemo(() => {
-    const result: { year: number; weeks: { index: number; lived: boolean; journaled: boolean; milestone: Milestone | null }[] }[] = [];
+    const result: { year: number; weeks: { index: number; lived: boolean; rating: number; milestone: Milestone | null }[] }[] = [];
     for (let y = 0; y < totalYears; y++) {
-      const weeksInYear: { index: number; lived: boolean; journaled: boolean; milestone: Milestone | null }[] = [];
+      const weeksInYear: { index: number; lived: boolean; rating: number; milestone: Milestone | null }[] = [];
       for (let w = 0; w < COLUMNS; w++) {
         const weekIndex = y * COLUMNS + w;
         if (weekIndex >= totalWeeks) break;
+
+        const entry = journalData[weekIndex];
+        let rating = 0;
+        if (entry) {
+          rating = categoryFilter
+            ? getCategoryRating(entry, categoryFilter)
+            : Math.round(getAverageRating(entry));
+        }
+
         weeksInYear.push({
           index: weekIndex,
           lived: weekIndex < weeksLived,
-          journaled: journaledWeeks.has(weekIndex),
+          rating,
           milestone: milestoneWeeks?.get(weekIndex) ?? null,
         });
       }
@@ -59,7 +79,7 @@ export default function WeekGridInteractive({
       }
     }
     return result;
-  }, [weeksLived, totalWeeks, totalYears, journaledWeeks, milestoneWeeks]);
+  }, [weeksLived, totalWeeks, totalYears, journalVersion, categoryFilter, milestoneWeeks]);
 
   const getWeekFromCoords = useCallback(
     (locationX: number, locationY: number): number | null => {
@@ -101,9 +121,9 @@ export default function WeekGridInteractive({
     [getWeekFromCoords, onWeekLongPress]
   );
 
-  const getBoxColor = (week: { lived: boolean; journaled: boolean; milestone: Milestone | null }) => {
+  const getBoxColor = (week: { lived: boolean; rating: number; milestone: Milestone | null }) => {
     if (week.milestone) return week.milestone.color;
-    if (week.journaled) return c.green;
+    if (week.rating > 0) return c.ratingColors[week.rating];
     if (week.lived) return c.gridLived;
     return c.gridRemaining;
   };
@@ -115,7 +135,7 @@ export default function WeekGridInteractive({
       </View>
 
       <View style={[styles.container, { backgroundColor: c.card, borderColor: c.border, borderWidth: B, shadowColor: c.shadow, shadowOffset: { width: S, height: S } }]}>
-        <Text style={[styles.subtitle, { color: c.text }]}>TAP A LIVED WEEK TO JOURNAL IT.</Text>
+        <Text style={[styles.subtitle, { color: c.text }]}>TAP A LIVED WEEK TO REVIEW IT.</Text>
 
         <Pressable onPress={handlePress} onLongPress={handleLongPress} ref={gridRef}>
           <View style={{ gap: GAP }}>
@@ -139,12 +159,16 @@ export default function WeekGridInteractive({
 
         <View style={[styles.legend, { borderTopColor: c.border }]}>
           <View style={styles.legendItem}>
-            <View style={[styles.legendBox, { backgroundColor: c.gridLived, borderColor: c.border }]} />
-            <Text style={[styles.legendText, { color: c.text }]}>LIVED</Text>
+            <View style={[styles.legendBox, { backgroundColor: c.ratingColors[5], borderColor: c.border }]} />
+            <Text style={[styles.legendText, { color: c.text }]}>GREAT</Text>
           </View>
           <View style={styles.legendItem}>
-            <View style={[styles.legendBox, { backgroundColor: c.green, borderColor: c.border }]} />
-            <Text style={[styles.legendText, { color: c.text }]}>JOURNALED</Text>
+            <View style={[styles.legendBox, { backgroundColor: c.ratingColors[1], borderColor: c.border }]} />
+            <Text style={[styles.legendText, { color: c.text }]}>ROUGH</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendBox, { backgroundColor: c.gridLived, borderColor: c.border }]} />
+            <Text style={[styles.legendText, { color: c.text }]}>UNRATED</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendBox, { backgroundColor: c.gridRemaining, borderColor: c.border }]} />
@@ -180,7 +204,7 @@ const styles = StyleSheet.create({
   legend: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: 14,
+    gap: 12,
     marginTop: 12,
     paddingTop: 10,
     borderTopWidth: 2,

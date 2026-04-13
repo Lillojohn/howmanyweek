@@ -8,10 +8,11 @@ import JournalModal from "../components/JournalModal";
 import MilestoneModal from "../components/MilestoneModal";
 import ShareCard from "../components/ShareCard";
 import StreakBadge from "../components/StreakBadge";
+import CategoryFilter from "../components/CategoryFilter";
 import { useTheme } from "../contexts/ThemeContext";
 import { lightTap } from "../utils/haptics";
 import { captureAndShare } from "../utils/share";
-import { getJournal, getJournaledWeeks } from "../utils/journal";
+import { getJournal, type JournalStore, type Category } from "../utils/journal";
 import { getMilestoneWeeks, getAllMilestonesSorted } from "../utils/milestones";
 import { calculateStreaks } from "../utils/streaks";
 import type { Milestone } from "../utils/milestones";
@@ -47,10 +48,12 @@ export default function DetailsScreen() {
   const lifeExpectancy = getLifeExpectancy(country, gender);
   const currentWeek = getCurrentWeekIndex(birthday);
 
-  const [journaledWeeks, setJournaledWeeks] = useState<Set<number>>(new Set());
+  const [journalData, setJournalData] = useState<JournalStore>({});
   const [milestoneWeeks, setMilestoneWeeks] = useState<Map<number, Milestone>>(new Map());
   const [milestoneList, setMilestoneList] = useState<Milestone[]>([]);
   const [streakData, setStreakData] = useState<StreakData>({ currentStreak: 0, longestStreak: 0, totalWeeksJournaled: 0 });
+  const [categoryFilter, setCategoryFilter] = useState<Category | null>(null);
+  const [previousIntention, setPreviousIntention] = useState("");
 
   const [journalModalVisible, setJournalModalVisible] = useState(false);
   const [milestoneModalVisible, setMilestoneModalVisible] = useState(false);
@@ -58,16 +61,19 @@ export default function DetailsScreen() {
   const shareRef = useRef<View>(null);
 
   const loadData = useCallback(async () => {
-    const [weeks, msWeeks, msList, journal] = await Promise.all([
-      getJournaledWeeks(),
+    const [journal, msWeeks, msList] = await Promise.all([
+      getJournal(),
       getMilestoneWeeks(),
       getAllMilestonesSorted(),
-      getJournal(),
     ]);
-    setJournaledWeeks(weeks);
+    setJournalData(journal);
     setMilestoneWeeks(msWeeks);
     setMilestoneList(msList);
     setStreakData(calculateStreaks(journal, currentWeek));
+
+    // Get previous week's intention for the journal modal
+    const prevEntry = journal[currentWeek - 1];
+    setPreviousIntention(prevEntry?.prompts?.intention ?? "");
   }, [currentWeek]);
 
   useEffect(() => {
@@ -145,11 +151,19 @@ export default function DetailsScreen() {
           </View>
         )}
 
+        <View style={{ marginTop: 12 }}>
+          <CategoryFilter
+            activeFilter={categoryFilter}
+            onFilterChange={setCategoryFilter}
+          />
+        </View>
+
         <WeekGridInteractive
           weeksLived={weeksLived}
           totalWeeks={totalWeeks}
-          journaledWeeks={journaledWeeks}
+          journalData={journalData}
           milestoneWeeks={milestoneWeeks}
+          categoryFilter={categoryFilter}
           onWeekPress={handleWeekPress}
           onWeekLongPress={handleWeekLongPress}
         />
@@ -210,6 +224,7 @@ export default function DetailsScreen() {
         visible={journalModalVisible}
         weekIndex={selectedWeek}
         birthday={birthday}
+        previousIntention={previousIntention}
         onClose={() => setJournalModalVisible(false)}
         onSaved={loadData}
       />
