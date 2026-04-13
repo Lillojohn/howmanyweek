@@ -9,6 +9,7 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: "#e8e4de" },
+          animation: "slide_from_right",
         }}
       />
     </>
