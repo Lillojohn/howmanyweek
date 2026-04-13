@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface Props {
   weeksLived: number;
@@ -8,8 +9,6 @@ interface Props {
   lifeExpectancy: number;
 }
 
-const BORDER = 3;
-
 export default function ProgressSummary({
   weeksLived,
   weeksRemaining,
@@ -17,46 +16,43 @@ export default function ProgressSummary({
   percentage,
   lifeExpectancy,
 }: Props) {
+  const { theme } = useTheme();
   const yearsRemaining = (weeksRemaining / 52.1429).toFixed(1);
+  const B = theme.border;
+  const S = theme.shadow;
+  const c = theme.colors;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.bigNumberCard}>
-        <Text style={styles.bigNumber}>{weeksRemaining.toLocaleString()}</Text>
-        <Text style={styles.label}>WEEKS REMAINING</Text>
+    <View style={{ gap: 12 }}>
+      <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border, borderWidth: B, shadowColor: c.shadow, shadowOffset: { width: S, height: S } }]}>
+        <Text style={[styles.bigNumber, { color: c.text }]}>{weeksRemaining.toLocaleString()}</Text>
+        <Text style={[styles.label, { color: c.text }]}>WEEKS REMAINING</Text>
       </View>
 
-      <View style={styles.subCard}>
+      <View style={[styles.subCard, { backgroundColor: c.purple, borderColor: c.border, borderWidth: B, shadowColor: c.shadow, shadowOffset: { width: 3, height: 3 } }]}>
         <Text style={styles.subLabel}>
           ~{yearsRemaining} YEARS (AVG. LIFE EXPECTANCY: {lifeExpectancy} YRS)
         </Text>
       </View>
 
-      <View style={styles.progressCard}>
-        <View style={styles.progressBarContainer}>
-          <View
-            style={[
-              styles.progressBarFill,
-              { width: `${Math.min(percentage, 100)}%` },
-            ]}
-          />
+      <View style={[styles.progressCard, { backgroundColor: c.card, borderColor: c.border, borderWidth: B, shadowColor: c.shadow, shadowOffset: { width: 4, height: 4 } }]}>
+        <View style={[styles.progressBar, { backgroundColor: c.gridRemaining, borderColor: c.border }]}>
+          <View style={[styles.progressFill, { backgroundColor: c.progressFill, width: `${Math.min(percentage, 100)}%` }]} />
         </View>
-        <Text style={styles.progressText}>{percentage.toFixed(1)}% DONE</Text>
+        <Text style={[styles.progressText, { color: c.text }]}>{percentage.toFixed(1)}% DONE</Text>
       </View>
 
-      <View style={styles.statsRow}>
-        <View style={[styles.statCard, { backgroundColor: "#A8E6CF" }]}>
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        <View style={[styles.statCard, { backgroundColor: c.green, borderColor: c.border, borderWidth: B, shadowColor: c.shadow, shadowOffset: { width: 3, height: 3 } }]}>
           <Text style={styles.statNumber}>{weeksLived.toLocaleString()}</Text>
           <Text style={styles.statLabel}>LIVED</Text>
         </View>
-        <View style={[styles.statCard, { backgroundColor: "#FFD93D" }]}>
+        <View style={[styles.statCard, { backgroundColor: c.yellow, borderColor: c.border, borderWidth: B, shadowColor: c.shadow, shadowOffset: { width: 3, height: 3 } }]}>
           <Text style={styles.statNumber}>{totalWeeks.toLocaleString()}</Text>
           <Text style={styles.statLabel}>TOTAL</Text>
         </View>
-        <View style={[styles.statCard, { backgroundColor: "#FF6B6B" }]}>
-          <Text style={styles.statNumber}>
-            {weeksRemaining.toLocaleString()}
-          </Text>
+        <View style={[styles.statCard, { backgroundColor: c.red, borderColor: c.border, borderWidth: B, shadowColor: c.shadow, shadowOffset: { width: 3, height: 3 } }]}>
+          <Text style={styles.statNumber}>{weeksRemaining.toLocaleString()}</Text>
           <Text style={styles.statLabel}>LEFT</Text>
         </View>
       </View>
@@ -65,113 +61,47 @@ export default function ProgressSummary({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    gap: 12,
-  },
-  bigNumberCard: {
-    backgroundColor: "#fff",
-    borderWidth: BORDER,
-    borderColor: "#000",
+  card: {
     padding: 24,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 5, height: 5 },
     shadowOpacity: 1,
     shadowRadius: 0,
     elevation: 5,
   },
-  bigNumber: {
-    fontSize: 64,
-    fontWeight: "900",
-    color: "#000",
-    fontVariant: ["tabular-nums"],
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: "#000",
-    letterSpacing: 2,
-    marginTop: 4,
-  },
+  bigNumber: { fontSize: 64, fontWeight: "900", fontVariant: ["tabular-nums"] },
+  label: { fontSize: 16, fontWeight: "900", letterSpacing: 2, marginTop: 4 },
   subCard: {
-    backgroundColor: "#C4B5FD",
-    borderWidth: BORDER,
-    borderColor: "#000",
     paddingVertical: 8,
     paddingHorizontal: 12,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 3, height: 3 },
     shadowOpacity: 1,
     shadowRadius: 0,
     elevation: 3,
   },
-  subLabel: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: "#000",
-    letterSpacing: 0.5,
-    textAlign: "center",
-  },
+  subLabel: { fontSize: 11, fontWeight: "800", color: "#000", letterSpacing: 0.5, textAlign: "center" },
   progressCard: {
-    backgroundColor: "#fff",
-    borderWidth: BORDER,
-    borderColor: "#000",
     padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 4, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 0,
     elevation: 4,
   },
-  progressBarContainer: {
+  progressBar: {
     width: "100%",
     height: 20,
-    backgroundColor: "#e8e4de",
     borderWidth: 2,
-    borderColor: "#000",
     overflow: "hidden",
   },
-  progressBarFill: {
-    height: "100%",
-    backgroundColor: "#FF6B6B",
-  },
-  progressText: {
-    fontSize: 12,
-    fontWeight: "900",
-    color: "#000",
-    textAlign: "center",
-    marginTop: 8,
-    letterSpacing: 1,
-  },
-  statsRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
+  progressFill: { height: "100%" },
+  progressText: { fontSize: 12, fontWeight: "900", textAlign: "center", marginTop: 8, letterSpacing: 1 },
   statCard: {
     flex: 1,
     alignItems: "center",
     paddingVertical: 14,
     paddingHorizontal: 4,
-    borderWidth: BORDER,
-    borderColor: "#000",
-    shadowColor: "#000",
-    shadowOffset: { width: 3, height: 3 },
     shadowOpacity: 1,
     shadowRadius: 0,
     elevation: 3,
   },
-  statNumber: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: "#000",
-    fontVariant: ["tabular-nums"],
-  },
-  statLabel: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: "#000",
-    marginTop: 2,
-    letterSpacing: 1,
-  },
+  statNumber: { fontSize: 16, fontWeight: "900", color: "#000", fontVariant: ["tabular-nums"] },
+  statLabel: { fontSize: 10, fontWeight: "800", color: "#000", marginTop: 2, letterSpacing: 1 },
 });

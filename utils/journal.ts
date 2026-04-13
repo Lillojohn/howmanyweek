@@ -1,0 +1,62 @@
+import * as FileSystem from "expo-file-system/legacy";
+
+export interface JournalEntry {
+  weekIndex: number;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type JournalStore = Record<number, JournalEntry>;
+
+const FILE_PATH = `${FileSystem.documentDirectory}weeksleft_journal.json`;
+
+async function readStore(): Promise<JournalStore> {
+  try {
+    const raw = await FileSystem.readAsStringAsync(FILE_PATH);
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+async function writeStore(store: JournalStore): Promise<void> {
+  await FileSystem.writeAsStringAsync(FILE_PATH, JSON.stringify(store));
+}
+
+export async function getJournal(): Promise<JournalStore> {
+  return readStore();
+}
+
+export async function getEntry(weekIndex: number): Promise<JournalEntry | null> {
+  const store = await readStore();
+  return store[weekIndex] ?? null;
+}
+
+export async function saveEntry(weekIndex: number, text: string): Promise<JournalEntry> {
+  const store = await readStore();
+  const now = new Date().toISOString();
+  const existing = store[weekIndex];
+
+  const entry: JournalEntry = {
+    weekIndex,
+    text,
+    createdAt: existing?.createdAt ?? now,
+    updatedAt: now,
+  };
+
+  store[weekIndex] = entry;
+  await writeStore(store);
+  return entry;
+}
+
+export async function deleteEntry(weekIndex: number): Promise<void> {
+  const store = await readStore();
+  delete store[weekIndex];
+  await writeStore(store);
+}
+
+export async function getJournaledWeeks(): Promise<Set<number>> {
+  const store = await readStore();
+  return new Set(Object.keys(store).map(Number));
+}
