@@ -5,6 +5,8 @@ import { useRouter } from "expo-router";
 import { getUserData, UserData } from "../utils/storage";
 import { useTheme } from "../contexts/ThemeContext";
 import { lightTap } from "../utils/haptics";
+import { getEntry } from "../utils/journal";
+import JournalModal from "../components/JournalModal";
 import type { Theme } from "../constants/theme";
 import {
   getWeeksLived,
@@ -32,6 +34,9 @@ export default function HomeScreen() {
   const { theme } = useTheme();
   const [data, setData] = useState<UserData | null>(null);
   const [quote, setQuote] = useState("");
+  const [showJournalPrompt, setShowJournalPrompt] = useState(false);
+  const [journalModalVisible, setJournalModalVisible] = useState(false);
+  const [lastWeekIndex, setLastWeekIndex] = useState(0);
 
   useEffect(() => {
     getUserData().then((d) => {
@@ -40,6 +45,17 @@ export default function HomeScreen() {
         return;
       }
       setData(d);
+
+      // Check if last week has a journal entry
+      const bday = new Date(d.birthday);
+      const currentWeek = getWeeksLived(bday);
+      const prevWeek = currentWeek - 1;
+      setLastWeekIndex(prevWeek);
+      if (prevWeek >= 0) {
+        getEntry(prevWeek).then((entry) => {
+          setShowJournalPrompt(!entry);
+        });
+      }
     });
     setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
   }, []);
@@ -78,6 +94,17 @@ export default function HomeScreen() {
             <Text style={s.quoteText}>{quote}</Text>
           </View>
 
+          {showJournalPrompt && (
+            <TouchableOpacity
+              style={[s.promptCard, { backgroundColor: theme.colors.red, borderColor: theme.colors.border }]}
+              onPress={() => { lightTap(); setJournalModalVisible(true); }}
+              activeOpacity={0.9}
+            >
+              <Text style={s.promptText}>WHAT DID YOU DO WITH LAST WEEK?</Text>
+              <Text style={s.promptSub}>TAP TO WRITE IT DOWN</Text>
+            </TouchableOpacity>
+          )}
+
           <View style={s.miniStats}>
             <Text style={[s.miniStatText, { color: theme.colors.text }]}>
               WEEK {weeksLived.toLocaleString()} OF {totalWeeks.toLocaleString()}
@@ -104,6 +131,16 @@ export default function HomeScreen() {
           <Text style={[s.detailsButtonText, { color: theme.colors.buttonText }]}>SEE ALL DATA</Text>
         </TouchableOpacity>
       </View>
+
+      {data && (
+        <JournalModal
+          visible={journalModalVisible}
+          weekIndex={lastWeekIndex}
+          birthday={new Date(data.birthday)}
+          onClose={() => setJournalModalVisible(false)}
+          onSaved={() => setShowJournalPrompt(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -127,7 +164,22 @@ function makeStyles(theme: Theme) {
       elevation: 2,
     },
     topButtonText: { fontSize: 11, fontWeight: "900", letterSpacing: 1 },
-    center: { alignItems: "center", gap: 20 },
+    center: { alignItems: "center", gap: 16 },
+    promptCard: {
+      borderWidth: B,
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      alignItems: "center",
+      width: "100%",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 4, height: 4 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 4,
+      transform: [{ rotate: "-0.3deg" }],
+    },
+    promptText: { fontSize: 14, fontWeight: "900", color: "#000", letterSpacing: 0.5, textAlign: "center" },
+    promptSub: { fontSize: 10, fontWeight: "700", color: "#000", marginTop: 4, letterSpacing: 1 },
     weekCard: {
       borderWidth: B,
       paddingVertical: 40,

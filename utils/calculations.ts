@@ -49,3 +49,17 @@ export function getPercentageLived(
   const lived = getWeeksLived(birthday);
   return Math.min(100, (lived / total) * 100);
 }
+
+export function getWeekDateRange(
+  weekIndex: number,
+  birthday: Date
+): { start: Date; end: Date } {
+  const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
+  const start = new Date(birthday.getTime() + weekIndex * MS_PER_WEEK);
+  const end = new Date(start.getTime() + MS_PER_WEEK - 1);
+  return { start, end };
+}
+
+export function getCurrentWeekIndex(birthday: Date): number {
+  return getWeeksLived(birthday);
+}
