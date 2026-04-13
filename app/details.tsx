@@ -1,8 +1,10 @@
-import { View, StyleSheet, TouchableOpacity, Text, ScrollView } from "react-native";
+import { StyleSheet, TouchableOpacity, Text, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import ProgressSummary from "../components/ProgressSummary";
 import WeekGrid from "../components/WeekGrid";
+import { useTheme } from "../contexts/ThemeContext";
+import { lightTap } from "../utils/haptics";
 import {
   getWeeksLived,
   getTotalWeeks,
@@ -11,8 +13,9 @@ import {
   getLifeExpectancy,
 } from "../utils/calculations";
 
-export default function ResultScreen() {
+export default function DetailsScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
   const params = useLocalSearchParams<{
     birthday: string;
     country: string;
@@ -29,15 +32,33 @@ export default function ResultScreen() {
   const percentage = getPercentageLived(birthday, country, gender);
   const lifeExpectancy = getLifeExpectancy(country, gender);
 
+  const B = theme.border;
+
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 40, paddingHorizontal: 16 }}>
         <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
+          style={{
+            backgroundColor: theme.colors.card,
+            borderWidth: B,
+            borderColor: theme.colors.border,
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            alignSelf: "flex-start",
+            marginTop: 8,
+            marginBottom: 16,
+            shadowColor: theme.colors.shadow,
+            shadowOffset: { width: 3, height: 3 },
+            shadowOpacity: 1,
+            shadowRadius: 0,
+            elevation: 3,
+          }}
+          onPress={() => { lightTap(); router.back(); }}
           activeOpacity={0.9}
         >
-          <Text style={styles.backButtonText}>BACK</Text>
+          <Text style={{ fontSize: 14, fontWeight: "900", color: theme.colors.text, letterSpacing: 1 }}>
+            BACK
+          </Text>
         </TouchableOpacity>
 
         <ProgressSummary
@@ -53,35 +74,3 @@ export default function ResultScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: "#e8e4de",
-  },
-  scroll: {
-    paddingBottom: 40,
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    backgroundColor: "#fff",
-    borderWidth: 3,
-    borderColor: "#000",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    alignSelf: "flex-start",
-    marginTop: 8,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 3,
-  },
-  backButtonText: {
-    fontSize: 14,
-    fontWeight: "900",
-    color: "#000",
-    letterSpacing: 1,
-  },
-});

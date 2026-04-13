@@ -1,8 +1,11 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { getUserData, UserData, clearUserData } from "../utils/storage";
+import { getUserData, UserData } from "../utils/storage";
+import { useTheme } from "../contexts/ThemeContext";
+import { lightTap } from "../utils/haptics";
+import type { Theme } from "../constants/theme";
 import {
   getWeeksLived,
   getWeeksRemaining,
@@ -26,6 +29,7 @@ const QUOTES = [
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
   const [data, setData] = useState<UserData | null>(null);
   const [quote, setQuote] = useState("");
 
@@ -47,197 +51,128 @@ export default function HomeScreen() {
   const weeksLived = getWeeksLived(birthday);
   const totalWeeks = getTotalWeeks(data.country, data.gender);
   const percentage = getPercentageLived(birthday, data.country, data.gender);
-  const lifeExpectancy = getLifeExpectancy(data.country, data.gender);
 
-  const handleReset = async () => {
-    await clearUserData();
-    router.replace("/setup");
-  };
+  const s = makeStyles(theme);
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
-        {/* Top bar */}
-        <View style={styles.topBar}>
-          <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
-            <Text style={styles.resetText}>RESET</Text>
+    <SafeAreaView style={[s.safe, { backgroundColor: theme.colors.background }]}>
+      <View style={s.container}>
+        <View style={s.topBar}>
+          <TouchableOpacity
+            style={[s.topButton, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
+            onPress={() => { lightTap(); router.push("/settings"); }}
+          >
+            <Text style={[s.topButtonText, { color: theme.colors.text }]}>SETTINGS</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Main content */}
-        <View style={styles.center}>
-          <View style={styles.weekCard}>
-            <Text style={styles.bigNumber}>
+        <View style={s.center}>
+          <View style={[s.weekCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
+            <Text style={[s.bigNumber, { color: theme.colors.text }]}>
               {weeksRemaining.toLocaleString()}
             </Text>
-            <Text style={styles.weeksLabel}>WEEKS LEFT</Text>
+            <Text style={[s.weeksLabel, { color: theme.colors.text }]}>WEEKS LEFT</Text>
           </View>
 
-          <View style={styles.quoteCard}>
-            <Text style={styles.quoteText}>{quote}</Text>
+          <View style={[s.quoteCard, { backgroundColor: theme.colors.yellow, borderColor: theme.colors.border }]}>
+            <Text style={s.quoteText}>{quote}</Text>
           </View>
 
-          <View style={styles.miniStats}>
-            <Text style={styles.miniStatText}>
+          <View style={s.miniStats}>
+            <Text style={[s.miniStatText, { color: theme.colors.text }]}>
               WEEK {weeksLived.toLocaleString()} OF {totalWeeks.toLocaleString()}
             </Text>
-            <View style={styles.miniProgressBar}>
+            <View style={[s.miniProgressBar, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
               <View
-                style={[
-                  styles.miniProgressFill,
-                  { width: `${Math.min(percentage, 100)}%` },
-                ]}
+                style={[s.miniProgressFill, { backgroundColor: theme.colors.progressFill, width: `${Math.min(percentage, 100)}%` }]}
               />
             </View>
           </View>
         </View>
 
-        {/* Bottom button */}
         <TouchableOpacity
-          style={styles.detailsButton}
-          onPress={() =>
+          style={[s.detailsButton, { backgroundColor: theme.colors.buttonBg, borderColor: theme.colors.border }]}
+          onPress={() => {
+            lightTap();
             router.push({
               pathname: "/details",
-              params: {
-                birthday: data.birthday,
-                country: data.country,
-                gender: data.gender,
-              },
-            })
-          }
+              params: { birthday: data.birthday, country: data.country, gender: data.gender },
+            });
+          }}
           activeOpacity={0.9}
         >
-          <Text style={styles.detailsButtonText}>SEE ALL DATA</Text>
+          <Text style={[s.detailsButtonText, { color: theme.colors.buttonText }]}>SEE ALL DATA</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
 
-const BORDER = 3;
-const SHADOW = 5;
+function makeStyles(theme: Theme) {
+  const B = theme.border;
+  const S = theme.shadow;
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#e8e4de" },
-  container: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    justifyContent: "space-between",
-  },
-  topBar: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  },
-  resetButton: {
-    backgroundColor: "#fff",
-    borderWidth: BORDER,
-    borderColor: "#000",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 2,
-  },
-  resetText: {
-    fontSize: 11,
-    fontWeight: "900",
-    color: "#000",
-    letterSpacing: 1,
-  },
-  center: {
-    alignItems: "center",
-    gap: 20,
-  },
-  weekCard: {
-    backgroundColor: "#fff",
-    borderWidth: BORDER,
-    borderColor: "#000",
-    paddingVertical: 40,
-    paddingHorizontal: 48,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: SHADOW, height: SHADOW },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 5,
-    transform: [{ rotate: "-0.5deg" }],
-  },
-  bigNumber: {
-    fontSize: 80,
-    fontWeight: "900",
-    color: "#000",
-    fontVariant: ["tabular-nums"],
-    lineHeight: 88,
-  },
-  weeksLabel: {
-    fontSize: 20,
-    fontWeight: "900",
-    color: "#000",
-    letterSpacing: 4,
-    marginTop: 4,
-  },
-  quoteCard: {
-    backgroundColor: "#FFD93D",
-    borderWidth: BORDER,
-    borderColor: "#000",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
-    transform: [{ rotate: "0.5deg" }],
-  },
-  quoteText: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#000",
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  miniStats: {
-    alignItems: "center",
-    gap: 8,
-    width: "100%",
-  },
-  miniStatText: {
-    fontSize: 12,
-    fontWeight: "900",
-    color: "#000",
-    letterSpacing: 1,
-  },
-  miniProgressBar: {
-    width: "80%",
-    height: 12,
-    backgroundColor: "#fff",
-    borderWidth: 2,
-    borderColor: "#000",
-    overflow: "hidden",
-  },
-  miniProgressFill: {
-    height: "100%",
-    backgroundColor: "#FF6B6B",
-  },
-  detailsButton: {
-    backgroundColor: "#000",
-    paddingVertical: 18,
-    alignItems: "center",
-    borderWidth: BORDER,
-    borderColor: "#000",
-    shadowColor: "#000",
-    shadowOffset: { width: SHADOW, height: SHADOW },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 5,
-  },
-  detailsButtonText: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: "#fff",
-    letterSpacing: 2,
-  },
-});
+  return StyleSheet.create({
+    safe: { flex: 1 },
+    container: { flex: 1, paddingHorizontal: 20, paddingVertical: 12, justifyContent: "space-between" },
+    topBar: { flexDirection: "row", justifyContent: "flex-end" },
+    topButton: {
+      borderWidth: B,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
+    },
+    topButtonText: { fontSize: 11, fontWeight: "900", letterSpacing: 1 },
+    center: { alignItems: "center", gap: 20 },
+    weekCard: {
+      borderWidth: B,
+      paddingVertical: 40,
+      paddingHorizontal: 48,
+      alignItems: "center",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: S, height: S },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 5,
+      transform: [{ rotate: "-0.5deg" }],
+    },
+    bigNumber: { fontSize: 80, fontWeight: "900", fontVariant: ["tabular-nums"], lineHeight: 88 },
+    weeksLabel: { fontSize: 20, fontWeight: "900", letterSpacing: 4, marginTop: 4 },
+    quoteCard: {
+      borderWidth: B,
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 4, height: 4 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 4,
+      transform: [{ rotate: "0.5deg" }],
+    },
+    quoteText: { fontSize: 16, fontWeight: "800", color: "#000", textAlign: "center", lineHeight: 22 },
+    miniStats: { alignItems: "center", gap: 8, width: "100%" },
+    miniStatText: { fontSize: 12, fontWeight: "900", letterSpacing: 1 },
+    miniProgressBar: {
+      width: "80%",
+      height: 12,
+      borderWidth: 2,
+      overflow: "hidden",
+    },
+    miniProgressFill: { height: "100%" },
+    detailsButton: {
+      borderWidth: B,
+      paddingVertical: 18,
+      alignItems: "center",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: S, height: S },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 5,
+    },
+    detailsButtonText: { fontSize: 16, fontWeight: "900", letterSpacing: 2 },
+  });
+}

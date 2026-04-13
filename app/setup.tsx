@@ -18,11 +18,14 @@ import { useRouter } from "expo-router";
 import { getCountries } from "../utils/calculations";
 import { saveUserData } from "../utils/storage";
 import { requestPermissions, scheduleWeeklyNotification } from "../utils/notifications";
+import { useTheme } from "../contexts/ThemeContext";
+import { lightTap, successTap } from "../utils/haptics";
 
 const countries = getCountries();
 
 export default function SetupScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
   const [birthday, setBirthday] = useState(new Date(1990, 0, 1));
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date(1990, 0, 1));
@@ -58,6 +61,7 @@ export default function SetupScreen() {
     };
 
     await saveUserData(data);
+    successTap();
 
     const granted = await requestPermissions();
     if (granted) {
@@ -76,7 +80,7 @@ export default function SetupScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
