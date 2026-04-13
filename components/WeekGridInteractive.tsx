@@ -1,13 +1,16 @@
 import { View, Text, StyleSheet, Dimensions, Pressable } from "react-native";
 import { useMemo, useCallback, useRef } from "react";
 import { useTheme } from "../contexts/ThemeContext";
-import { lightTap } from "../utils/haptics";
+import { lightTap, mediumTap } from "../utils/haptics";
+import type { Milestone } from "../utils/milestones";
 
 interface Props {
   weeksLived: number;
   totalWeeks: number;
   journaledWeeks: Set<number>;
+  milestoneWeeks: Map<number, Milestone>;
   onWeekPress: (weekIndex: number) => void;
+  onWeekLongPress: (weekIndex: number) => void;
 }
 
 const COLUMNS = 52;
@@ -24,7 +27,9 @@ export default function WeekGridInteractive({
   weeksLived,
   totalWeeks,
   journaledWeeks,
+  milestoneWeeks,
   onWeekPress,
+  onWeekLongPress,
 }: Props) {
   const { theme } = useTheme();
   const c = theme.colors;
@@ -36,9 +41,9 @@ export default function WeekGridInteractive({
   const labelInterval = 10;
 
   const rows = useMemo(() => {
-    const result: { year: number; weeks: { index: number; lived: boolean; journaled: boolean }[] }[] = [];
+    const result: { year: number; weeks: { index: number; lived: boolean; journaled: boolean; milestone: Milestone | null }[] }[] = [];
     for (let y = 0; y < totalYears; y++) {
-      const weeksInYear: { index: number; lived: boolean; journaled: boolean }[] = [];
+      const weeksInYear: { index: number; lived: boolean; journaled: boolean; milestone: Milestone | null }[] = [];
       for (let w = 0; w < COLUMNS; w++) {
         const weekIndex = y * COLUMNS + w;
         if (weekIndex >= totalWeeks) break;
@@ -46,6 +51,7 @@ export default function WeekGridInteractive({
           index: weekIndex,
           lived: weekIndex < weeksLived,
           journaled: journaledWeeks.has(weekIndex),
+          milestone: milestoneWeeks?.get(weekIndex) ?? null,
         });
       }
       if (weeksInYear.length > 0) {
@@ -53,34 +59,50 @@ export default function WeekGridInteractive({
       }
     }
     return result;
-  }, [weeksLived, totalWeeks, totalYears, journaledWeeks]);
+  }, [weeksLived, totalWeeks, totalYears, journaledWeeks, milestoneWeeks]);
 
-  const handlePress = useCallback(
-    (e: { nativeEvent: { locationX: number; locationY: number } }) => {
-      const { locationX, locationY } = e.nativeEvent;
-
-      // Account for label column
+  const getWeekFromCoords = useCallback(
+    (locationX: number, locationY: number): number | null => {
       const gridX = locationX - LABEL_WIDTH - LABEL_MARGIN;
-      if (gridX < 0) return;
+      if (gridX < 0) return null;
 
       const col = Math.floor(gridX / (BOX_SIZE + GAP));
       const row = Math.floor(locationY / (BOX_SIZE + GAP));
 
-      if (col < 0 || col >= COLUMNS || row < 0 || row >= totalYears) return;
+      if (col < 0 || col >= COLUMNS || row < 0 || row >= totalYears) return null;
 
       const weekIndex = row * COLUMNS + col;
-      if (weekIndex >= totalWeeks) return;
+      if (weekIndex >= totalWeeks || weekIndex >= weeksLived) return null;
 
-      // Only allow tapping lived weeks
-      if (weekIndex < weeksLived) {
+      return weekIndex;
+    },
+    [weeksLived, totalWeeks, totalYears]
+  );
+
+  const handlePress = useCallback(
+    (e: { nativeEvent: { locationX: number; locationY: number } }) => {
+      const weekIndex = getWeekFromCoords(e.nativeEvent.locationX, e.nativeEvent.locationY);
+      if (weekIndex !== null) {
         lightTap();
         onWeekPress(weekIndex);
       }
     },
-    [weeksLived, totalWeeks, totalYears, onWeekPress]
+    [getWeekFromCoords, onWeekPress]
   );
 
-  const getBoxColor = (week: { lived: boolean; journaled: boolean }) => {
+  const handleLongPress = useCallback(
+    (e: { nativeEvent: { locationX: number; locationY: number } }) => {
+      const weekIndex = getWeekFromCoords(e.nativeEvent.locationX, e.nativeEvent.locationY);
+      if (weekIndex !== null) {
+        mediumTap();
+        onWeekLongPress(weekIndex);
+      }
+    },
+    [getWeekFromCoords, onWeekLongPress]
+  );
+
+  const getBoxColor = (week: { lived: boolean; journaled: boolean; milestone: Milestone | null }) => {
+    if (week.milestone) return week.milestone.color;
     if (week.journaled) return c.green;
     if (week.lived) return c.gridLived;
     return c.gridRemaining;
@@ -95,7 +117,7 @@ export default function WeekGridInteractive({
       <View style={[styles.container, { backgroundColor: c.card, borderColor: c.border, borderWidth: B, shadowColor: c.shadow, shadowOffset: { width: S, height: S } }]}>
         <Text style={[styles.subtitle, { color: c.text }]}>TAP A LIVED WEEK TO JOURNAL IT.</Text>
 
-        <Pressable onPress={handlePress} ref={gridRef}>
+        <Pressable onPress={handlePress} onLongPress={handleLongPress} ref={gridRef}>
           <View style={{ gap: GAP }}>
             {rows.map((row) => (
               <View key={row.year} style={styles.row}>

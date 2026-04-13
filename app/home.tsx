@@ -5,8 +5,10 @@ import { useRouter } from "expo-router";
 import { getUserData, UserData } from "../utils/storage";
 import { useTheme } from "../contexts/ThemeContext";
 import { lightTap } from "../utils/haptics";
-import { getEntry } from "../utils/journal";
+import { getEntry, getJournal } from "../utils/journal";
+import { calculateStreaks } from "../utils/streaks";
 import JournalModal from "../components/JournalModal";
+import StreakBadge from "../components/StreakBadge";
 import type { Theme } from "../constants/theme";
 import {
   getWeeksLived,
@@ -37,6 +39,7 @@ export default function HomeScreen() {
   const [showJournalPrompt, setShowJournalPrompt] = useState(false);
   const [journalModalVisible, setJournalModalVisible] = useState(false);
   const [lastWeekIndex, setLastWeekIndex] = useState(0);
+  const [streakData, setStreakData] = useState({ currentStreak: 0, longestStreak: 0, totalWeeksJournaled: 0 });
 
   useEffect(() => {
     getUserData().then((d) => {
@@ -56,6 +59,11 @@ export default function HomeScreen() {
           setShowJournalPrompt(!entry);
         });
       }
+
+      // Load streak data
+      getJournal().then((journal) => {
+        setStreakData(calculateStreaks(journal, currentWeek));
+      });
     });
     setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
   }, []);
@@ -93,6 +101,11 @@ export default function HomeScreen() {
           <View style={[s.quoteCard, { backgroundColor: theme.colors.yellow, borderColor: theme.colors.border }]}>
             <Text style={s.quoteText}>{quote}</Text>
           </View>
+
+          <StreakBadge
+            currentStreak={streakData.currentStreak}
+            totalJournaled={streakData.totalWeeksJournaled}
+          />
 
           {showJournalPrompt && (
             <TouchableOpacity

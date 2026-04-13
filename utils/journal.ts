@@ -13,8 +13,6 @@ const FILE_PATH = `${FileSystem.documentDirectory}weeksleft_journal.json`;
 
 async function readStore(): Promise<JournalStore> {
   try {
-    const info = await FileSystem.getInfoAsync(FILE_PATH);
-    if (!info.exists) return {};
     const raw = await FileSystem.readAsStringAsync(FILE_PATH);
     return JSON.parse(raw);
   } catch {
