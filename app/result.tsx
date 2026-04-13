@@ -32,8 +32,12 @@ export default function ResultScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backButtonText}>Back</Text>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+          activeOpacity={0.9}
+        >
+          <Text style={styles.backButtonText}>BACK</Text>
         </TouchableOpacity>
 
         <ProgressSummary
@@ -44,8 +48,6 @@ export default function ResultScreen() {
           lifeExpectancy={lifeExpectancy}
         />
 
-        <View style={styles.divider} />
-
         <WeekGrid weeksLived={weeksLived} totalWeeks={totalWeeks} />
       </ScrollView>
     </SafeAreaView>
@@ -55,25 +57,31 @@ export default function ResultScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#e8e4de",
   },
   scroll: {
     paddingBottom: 40,
+    paddingHorizontal: 16,
   },
   backButton: {
+    backgroundColor: "#fff",
+    borderWidth: 3,
+    borderColor: "#000",
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 10,
     alignSelf: "flex-start",
+    marginTop: 8,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 3,
   },
   backButtonText: {
-    fontSize: 16,
-    color: "#4a6cf7",
-    fontWeight: "600",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#eee",
-    marginHorizontal: 20,
-    marginVertical: 8,
+    fontSize: 14,
+    fontWeight: "900",
+    color: "#000",
+    letterSpacing: 1,
   },
 });

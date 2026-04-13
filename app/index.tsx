@@ -9,6 +9,7 @@ import {
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -62,241 +63,304 @@ export default function InputScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
-        style={styles.container}
+        style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>How Many Weeks?</Text>
-          <Text style={styles.subtitle}>
-            See your life in weeks based on{"\n"}average life expectancy
-          </Text>
-        </View>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.header}>
+            <View style={styles.titleCard}>
+              <Text style={styles.title}>HOW MANY{"\n"}WEEKS?</Text>
+            </View>
+            <Text style={styles.subtitle}>
+              YOUR LIFE IN WEEKS BASED ON AVERAGE LIFE EXPECTANCY
+            </Text>
+          </View>
 
-        <View style={styles.form}>
-          {/* Birthday */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Birthday</Text>
-            {Platform.OS === "ios" ? (
-              <DateTimePicker
-                value={birthday}
-                mode="date"
-                display="compact"
-                maximumDate={new Date()}
-                minimumDate={new Date(1900, 0, 1)}
-                onValueChange={onDateChange}
-                style={styles.datePicker}
-              />
-            ) : (
-              <>
-                <TouchableOpacity
-                  style={styles.dateButton}
-                  onPress={() => setShowDatePicker(true)}
-                >
-                  <Text style={styles.dateButtonText}>
-                    {formatDate(birthday)}
-                  </Text>
-                </TouchableOpacity>
-                {showDatePicker && (
+          <View style={styles.form}>
+            {/* Birthday */}
+            <View style={styles.field}>
+              <View style={styles.labelCard}>
+                <Text style={styles.fieldLabel}>BIRTHDAY</Text>
+              </View>
+              {Platform.OS === "ios" ? (
+                <View style={styles.inputBox}>
                   <DateTimePicker
                     value={birthday}
                     mode="date"
-                    display="default"
+                    display="compact"
                     maximumDate={new Date()}
                     minimumDate={new Date(1900, 0, 1)}
                     onValueChange={onDateChange}
+                    style={styles.datePicker}
                   />
-                )}
-              </>
-            )}
-          </View>
-
-          {/* Country */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Country</Text>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search country..."
-              placeholderTextColor="#aaa"
-              value={showCountryList ? countrySearch : country || countrySearch}
-              onFocus={() => {
-                setShowCountryList(true);
-                setCountrySearch("");
-              }}
-              onChangeText={(text) => {
-                setCountrySearch(text);
-                setCountry("");
-                setShowCountryList(true);
-              }}
-            />
-            {showCountryList && (
-              <View style={styles.countryList}>
-                <FlatList
-                  data={filteredCountries}
-                  keyExtractor={(item) => item}
-                  keyboardShouldPersistTaps="handled"
-                  style={styles.countryFlatList}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      style={styles.countryItem}
-                      onPress={() => {
-                        setCountry(item);
-                        setCountrySearch(item);
-                        setShowCountryList(false);
-                        Keyboard.dismiss();
-                      }}
-                    >
-                      <Text
-                        style={[
-                          styles.countryItemText,
-                          item === country && styles.countryItemSelected,
-                        ]}
-                      >
-                        {item}
-                      </Text>
-                    </TouchableOpacity>
+                </View>
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={styles.inputBox}
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <Text style={styles.inputText}>
+                      {formatDate(birthday)}
+                    </Text>
+                  </TouchableOpacity>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={birthday}
+                      mode="date"
+                      display="default"
+                      maximumDate={new Date()}
+                      minimumDate={new Date(1900, 0, 1)}
+                      onValueChange={onDateChange}
+                    />
                   )}
-                />
-              </View>
-            )}
-          </View>
+                </>
+              )}
+            </View>
 
-          {/* Gender */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Gender</Text>
-            <View style={styles.genderRow}>
-              <TouchableOpacity
-                style={[
-                  styles.genderButton,
-                  gender === "male" && styles.genderButtonActive,
-                ]}
-                onPress={() => setGender("male")}
-              >
-                <Text
+            {/* Country */}
+            <View style={[styles.field, { zIndex: 10 }]}>
+              <View style={styles.labelCard}>
+                <Text style={styles.fieldLabel}>COUNTRY</Text>
+              </View>
+              <TextInput
+                style={[styles.inputBox, styles.textInput]}
+                placeholder="TYPE TO SEARCH..."
+                placeholderTextColor="#999"
+                value={showCountryList ? countrySearch : country || countrySearch}
+                onFocus={() => {
+                  setShowCountryList(true);
+                  setCountrySearch("");
+                }}
+                onChangeText={(text) => {
+                  setCountrySearch(text);
+                  setCountry("");
+                  setShowCountryList(true);
+                }}
+              />
+              {showCountryList && (
+                <View style={styles.countryList}>
+                  <FlatList
+                    data={filteredCountries}
+                    keyExtractor={(item) => item}
+                    keyboardShouldPersistTaps="handled"
+                    style={styles.countryFlatList}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={[
+                          styles.countryItem,
+                          item === country && styles.countryItemActive,
+                        ]}
+                        onPress={() => {
+                          setCountry(item);
+                          setCountrySearch(item);
+                          setShowCountryList(false);
+                          Keyboard.dismiss();
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.countryItemText,
+                            item === country && styles.countryItemTextActive,
+                          ]}
+                        >
+                          {item}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  />
+                </View>
+              )}
+            </View>
+
+            {/* Gender */}
+            <View style={styles.field}>
+              <View style={styles.labelCard}>
+                <Text style={styles.fieldLabel}>GENDER</Text>
+              </View>
+              <View style={styles.genderRow}>
+                <TouchableOpacity
                   style={[
-                    styles.genderButtonText,
-                    gender === "male" && styles.genderButtonTextActive,
+                    styles.genderButton,
+                    gender === "male" && styles.genderButtonActive,
                   ]}
+                  onPress={() => setGender("male")}
                 >
-                  Male
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.genderButton,
-                  gender === "female" && styles.genderButtonActive,
-                ]}
-                onPress={() => setGender("female")}
-              >
-                <Text
+                  <Text
+                    style={[
+                      styles.genderButtonText,
+                      gender === "male" && styles.genderButtonTextActive,
+                    ]}
+                  >
+                    MALE
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
                   style={[
-                    styles.genderButtonText,
-                    gender === "female" && styles.genderButtonTextActive,
+                    styles.genderButton,
+                    gender === "female" && styles.genderButtonActive,
                   ]}
+                  onPress={() => setGender("female")}
                 >
-                  Female
-                </Text>
-              </TouchableOpacity>
+                  <Text
+                    style={[
+                      styles.genderButtonText,
+                      gender === "female" && styles.genderButtonTextActive,
+                    ]}
+                  >
+                    FEMALE
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
 
-        <TouchableOpacity
-          style={[styles.calculateButton, !canCalculate && styles.calculateButtonDisabled]}
-          onPress={handleCalculate}
-          disabled={!canCalculate}
-        >
-          <Text style={styles.calculateButtonText}>Calculate</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.calculateButton,
+              !canCalculate && styles.calculateButtonDisabled,
+            ]}
+            onPress={handleCalculate}
+            disabled={!canCalculate}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.calculateButtonText}>CALCULATE</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
+const BORDER = 3;
+const SHADOW_OFFSET = 5;
+
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#e8e4de",
   },
   container: {
-    flex: 1,
-    paddingHorizontal: 24,
+    flexGrow: 1,
+    paddingHorizontal: 20,
     justifyContent: "center",
+    paddingVertical: 24,
   },
   header: {
     alignItems: "center",
-    marginBottom: 40,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "800",
-    color: "#1a1a2e",
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#888",
-    marginTop: 8,
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  form: {
-    gap: 24,
     marginBottom: 32,
   },
-  field: {
-    zIndex: 1,
+  titleCard: {
+    backgroundColor: "#FF6B6B",
+    borderWidth: BORDER,
+    borderColor: "#000",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: SHADOW_OFFSET, height: SHADOW_OFFSET },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 5,
+    transform: [{ rotate: "-1deg" }],
+  },
+  title: {
+    fontSize: 36,
+    fontWeight: "900",
+    color: "#000",
+    textAlign: "center",
+    lineHeight: 40,
+  },
+  subtitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#000",
+    marginTop: 16,
+    textAlign: "center",
+    letterSpacing: 1,
+  },
+  form: {
+    gap: 20,
+    marginBottom: 28,
+  },
+  field: {},
+  labelCard: {
+    backgroundColor: "#A8E6CF",
+    borderWidth: BORDER,
+    borderColor: "#000",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    alignSelf: "flex-start",
+    marginBottom: -BORDER,
+    zIndex: 2,
+    marginLeft: 12,
   },
   fieldLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#555",
-    marginBottom: 8,
+    fontSize: 13,
+    fontWeight: "900",
+    color: "#000",
+    letterSpacing: 1,
+  },
+  inputBox: {
+    backgroundColor: "#fff",
+    borderWidth: BORDER,
+    borderColor: "#000",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
+  },
+  textInput: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#000",
+  },
+  inputText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#000",
   },
   datePicker: {
     alignSelf: "flex-start",
-  },
-  dateButton: {
-    backgroundColor: "#f5f5f7",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-  },
-  dateButtonText: {
-    fontSize: 16,
-    color: "#1a1a2e",
-  },
-  searchInput: {
-    backgroundColor: "#f5f5f7",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    fontSize: 16,
-    color: "#1a1a2e",
+    marginLeft: -8,
   },
   countryList: {
     backgroundColor: "#fff",
-    borderRadius: 12,
-    marginTop: 4,
-    borderWidth: 1,
-    borderColor: "#e8e8e8",
-    maxHeight: 200,
+    borderWidth: BORDER,
+    borderColor: "#000",
+    borderTopWidth: 0,
+    maxHeight: 180,
     overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
   },
   countryFlatList: {
-    maxHeight: 200,
+    maxHeight: 180,
   },
   countryItem: {
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#eee",
+    borderBottomWidth: 2,
+    borderBottomColor: "#e8e4de",
+  },
+  countryItemActive: {
+    backgroundColor: "#FFD93D",
   },
   countryItemText: {
     fontSize: 15,
-    color: "#333",
+    fontWeight: "700",
+    color: "#000",
   },
-  countryItemSelected: {
-    color: "#4a6cf7",
-    fontWeight: "600",
+  countryItemTextActive: {
+    color: "#000",
   },
   genderRow: {
     flexDirection: "row",
@@ -304,34 +368,51 @@ const styles = StyleSheet.create({
   },
   genderButton: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: "#f5f5f7",
+    paddingVertical: 16,
+    backgroundColor: "#fff",
     alignItems: "center",
+    borderWidth: BORDER,
+    borderColor: "#000",
+    shadowColor: "#000",
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
   },
   genderButtonActive: {
-    backgroundColor: "#4a6cf7",
+    backgroundColor: "#FFD93D",
+    shadowOffset: { width: 2, height: 2 },
+    transform: [{ translateX: 2 }, { translateY: 2 }],
   },
   genderButtonText: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#555",
+    fontWeight: "900",
+    color: "#000",
+    letterSpacing: 1,
   },
   genderButtonTextActive: {
-    color: "#fff",
+    color: "#000",
   },
   calculateButton: {
-    backgroundColor: "#1a1a2e",
-    paddingVertical: 18,
-    borderRadius: 16,
+    backgroundColor: "#000",
+    paddingVertical: 20,
     alignItems: "center",
+    borderWidth: BORDER,
+    borderColor: "#000",
+    shadowColor: "#000",
+    shadowOffset: { width: SHADOW_OFFSET, height: SHADOW_OFFSET },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 5,
   },
   calculateButtonDisabled: {
-    opacity: 0.4,
+    backgroundColor: "#bbb",
+    shadowOffset: { width: 2, height: 2 },
   },
   calculateButtonText: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 20,
+    fontWeight: "900",
     color: "#fff",
+    letterSpacing: 2,
   },
 });

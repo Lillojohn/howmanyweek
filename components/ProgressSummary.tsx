@@ -8,6 +8,8 @@ interface Props {
   lifeExpectancy: number;
 }
 
+const BORDER = 3;
+
 export default function ProgressSummary({
   weeksLived,
   weeksRemaining,
@@ -19,27 +21,43 @@ export default function ProgressSummary({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.bigNumber}>{weeksRemaining.toLocaleString()}</Text>
-      <Text style={styles.label}>weeks remaining</Text>
-      <Text style={styles.subLabel}>
-        ~{yearsRemaining} years (avg. life expectancy: {lifeExpectancy} years)
-      </Text>
-
-      <View style={styles.progressBarContainer}>
-        <View style={[styles.progressBarFill, { width: `${Math.min(percentage, 100)}%` }]} />
+      <View style={styles.bigNumberCard}>
+        <Text style={styles.bigNumber}>{weeksRemaining.toLocaleString()}</Text>
+        <Text style={styles.label}>WEEKS REMAINING</Text>
       </View>
+
+      <View style={styles.subCard}>
+        <Text style={styles.subLabel}>
+          ~{yearsRemaining} YEARS (AVG. LIFE EXPECTANCY: {lifeExpectancy} YRS)
+        </Text>
+      </View>
+
+      <View style={styles.progressCard}>
+        <View style={styles.progressBarContainer}>
+          <View
+            style={[
+              styles.progressBarFill,
+              { width: `${Math.min(percentage, 100)}%` },
+            ]}
+          />
+        </View>
+        <Text style={styles.progressText}>{percentage.toFixed(1)}% DONE</Text>
+      </View>
+
       <View style={styles.statsRow}>
-        <View style={styles.stat}>
+        <View style={[styles.statCard, { backgroundColor: "#A8E6CF" }]}>
           <Text style={styles.statNumber}>{weeksLived.toLocaleString()}</Text>
-          <Text style={styles.statLabel}>weeks lived</Text>
+          <Text style={styles.statLabel}>LIVED</Text>
         </View>
-        <View style={styles.stat}>
+        <View style={[styles.statCard, { backgroundColor: "#FFD93D" }]}>
           <Text style={styles.statNumber}>{totalWeeks.toLocaleString()}</Text>
-          <Text style={styles.statLabel}>total weeks</Text>
+          <Text style={styles.statLabel}>TOTAL</Text>
         </View>
-        <View style={styles.stat}>
-          <Text style={styles.statNumber}>{percentage.toFixed(1)}%</Text>
-          <Text style={styles.statLabel}>completed</Text>
+        <View style={[styles.statCard, { backgroundColor: "#FF6B6B" }]}>
+          <Text style={styles.statNumber}>
+            {weeksRemaining.toLocaleString()}
+          </Text>
+          <Text style={styles.statLabel}>LEFT</Text>
         </View>
       </View>
     </View>
@@ -48,58 +66,112 @@ export default function ProgressSummary({
 
 const styles = StyleSheet.create({
   container: {
+    gap: 12,
+  },
+  bigNumberCard: {
+    backgroundColor: "#fff",
+    borderWidth: BORDER,
+    borderColor: "#000",
+    padding: 24,
     alignItems: "center",
-    paddingVertical: 24,
-    paddingHorizontal: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 5, height: 5 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 5,
   },
   bigNumber: {
-    fontSize: 56,
-    fontWeight: "800",
-    color: "#1a1a2e",
+    fontSize: 64,
+    fontWeight: "900",
+    color: "#000",
     fontVariant: ["tabular-nums"],
   },
   label: {
-    fontSize: 18,
-    color: "#555",
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#000",
+    letterSpacing: 2,
     marginTop: 4,
   },
+  subCard: {
+    backgroundColor: "#C4B5FD",
+    borderWidth: BORDER,
+    borderColor: "#000",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 3,
+  },
   subLabel: {
-    fontSize: 13,
-    color: "#888",
-    marginTop: 6,
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#000",
+    letterSpacing: 0.5,
+    textAlign: "center",
+  },
+  progressCard: {
+    backgroundColor: "#fff",
+    borderWidth: BORDER,
+    borderColor: "#000",
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
   },
   progressBarContainer: {
     width: "100%",
-    height: 12,
-    backgroundColor: "#e8e8e8",
-    borderRadius: 6,
-    marginTop: 24,
+    height: 20,
+    backgroundColor: "#e8e4de",
+    borderWidth: 2,
+    borderColor: "#000",
     overflow: "hidden",
   },
   progressBarFill: {
     height: "100%",
-    backgroundColor: "#4a6cf7",
-    borderRadius: 6,
+    backgroundColor: "#FF6B6B",
+  },
+  progressText: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: "#000",
+    textAlign: "center",
+    marginTop: 8,
+    letterSpacing: 1,
   },
   statsRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginTop: 16,
+    gap: 8,
   },
-  stat: {
-    alignItems: "center",
+  statCard: {
     flex: 1,
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 4,
+    borderWidth: BORDER,
+    borderColor: "#000",
+    shadowColor: "#000",
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 3,
   },
   statNumber: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1a1a2e",
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#000",
     fontVariant: ["tabular-nums"],
   },
   statLabel: {
-    fontSize: 12,
-    color: "#888",
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#000",
     marginTop: 2,
+    letterSpacing: 1,
   },
 });
