@@ -11,6 +11,7 @@ import { getSettings, saveSetting } from "../utils/settings";
 import JournalModal from "../components/JournalModal";
 import StreakBadge from "../components/StreakBadge";
 import OnboardingAnimation from "../components/OnboardingAnimation";
+import { updateWidget } from "../utils/widget";
 import type { Theme } from "../constants/theme";
 import {
   getWeeksLived,
@@ -67,6 +68,9 @@ export default function HomeScreen() {
       getJournal().then((journal) => {
         setStreakData(calculateStreaks(journal, currentWeek));
       });
+
+      // Update widget
+      updateWidget();
 
       // Check if onboarding animation should show
       getSettings().then((s) => {

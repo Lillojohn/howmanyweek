@@ -20,6 +20,7 @@ import { saveUserData } from "../utils/storage";
 import { requestPermissions, scheduleWeeklyNotification } from "../utils/notifications";
 import { useTheme } from "../contexts/ThemeContext";
 import { lightTap, successTap } from "../utils/haptics";
+import { updateWidget } from "../utils/widget";
 
 const countries = getCountries();
 
@@ -68,6 +69,7 @@ export default function SetupScreen() {
       await scheduleWeeklyNotification(data.birthday, data.country, data.gender);
     }
 
+    updateWidget();
     router.replace("/home");
   };
 
