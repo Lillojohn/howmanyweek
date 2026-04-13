@@ -21,6 +21,7 @@ import { requestPermissions, scheduleWeeklyNotification } from "../utils/notific
 import { useTheme } from "../contexts/ThemeContext";
 import { lightTap, successTap } from "../utils/haptics";
 import { updateWidget } from "../utils/widget";
+import type { Theme } from "../constants/theme";
 
 const countries = getCountries();
 
@@ -81,49 +82,52 @@ export default function SetupScreen() {
     });
   };
 
+  const c = theme.colors;
+  const s = makeStyles(theme);
+
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[s.safe, { backgroundColor: c.background }]}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          contentContainerStyle={styles.container}
+          contentContainerStyle={s.container}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.header}>
-            <View style={styles.titleCard}>
-              <Text style={styles.title}>WEEKS{"\n"}LEFT</Text>
+          <View style={s.header}>
+            <View style={[s.titleCard, { backgroundColor: c.red, borderColor: c.border }]}>
+              <Text style={[s.title, { color: c.text }]}>WEEKS{"\n"}LEFT</Text>
             </View>
-            <Text style={styles.subtitle}>
+            <Text style={[s.subtitle, { color: c.text }]}>
               SEE HOW MANY WEEKS YOU HAVE LEFT.{"\n"}GET A WEEKLY REMINDER TO MAKE THEM COUNT.
             </Text>
           </View>
 
-          <View style={styles.form}>
+          <View style={s.form}>
             {/* Birthday */}
-            <View style={styles.field}>
-              <View style={styles.labelCard}>
-                <Text style={styles.fieldLabel}>BIRTHDAY</Text>
+            <View style={s.field}>
+              <View style={[s.labelCard, { backgroundColor: c.green, borderColor: c.border }]}>
+                <Text style={s.fieldLabel}>BIRTHDAY</Text>
               </View>
               <TouchableOpacity
-                style={styles.inputBox}
+                style={[s.inputBox, { backgroundColor: c.inputBg, borderColor: c.border }]}
                 onPress={() => {
                   setTempDate(birthday);
                   setShowDatePicker(true);
                 }}
                 activeOpacity={0.9}
               >
-                <Text style={styles.inputText}>{formatDate(birthday)}</Text>
+                <Text style={[s.inputText, { color: c.text }]}>{formatDate(birthday)}</Text>
               </TouchableOpacity>
             </View>
 
             {/* Date Picker Modal */}
             <Modal visible={showDatePicker} transparent animationType="slide">
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalCard}>
-                  <View style={styles.modalTitleCard}>
-                    <Text style={styles.modalTitleText}>PICK YOUR BIRTHDAY</Text>
+              <View style={s.modalOverlay}>
+                <View style={[s.modalCard, { backgroundColor: c.background, borderColor: c.border }]}>
+                  <View style={[s.modalTitleCard, { backgroundColor: c.red, borderBottomColor: c.border }]}>
+                    <Text style={s.modalTitleText}>PICK YOUR BIRTHDAY</Text>
                   </View>
                   <DateTimePicker
                     value={tempDate}
@@ -132,25 +136,25 @@ export default function SetupScreen() {
                     maximumDate={new Date()}
                     minimumDate={new Date(1900, 0, 1)}
                     onValueChange={onDateChange}
-                    style={styles.spinnerPicker}
+                    style={[s.spinnerPicker, { backgroundColor: c.card }]}
                   />
-                  <View style={styles.modalButtons}>
+                  <View style={[s.modalButtons, { borderTopColor: c.border }]}>
                     <TouchableOpacity
-                      style={styles.modalCancelButton}
+                      style={[s.modalCancelButton, { backgroundColor: c.card, borderRightColor: c.border }]}
                       onPress={() => setShowDatePicker(false)}
                       activeOpacity={0.9}
                     >
-                      <Text style={styles.modalButtonText}>CANCEL</Text>
+                      <Text style={[s.modalButtonText, { color: c.text }]}>CANCEL</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={styles.modalConfirmButton}
+                      style={[s.modalConfirmButton, { backgroundColor: c.green, borderLeftColor: c.border }]}
                       onPress={() => {
                         setBirthday(tempDate);
                         setShowDatePicker(false);
                       }}
                       activeOpacity={0.9}
                     >
-                      <Text style={styles.modalButtonText}>DONE</Text>
+                      <Text style={s.modalButtonText}>DONE</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -158,14 +162,14 @@ export default function SetupScreen() {
             </Modal>
 
             {/* Country */}
-            <View style={[styles.field, { zIndex: 10 }]}>
-              <View style={styles.labelCard}>
-                <Text style={styles.fieldLabel}>COUNTRY</Text>
+            <View style={[s.field, { zIndex: 10 }]}>
+              <View style={[s.labelCard, { backgroundColor: c.green, borderColor: c.border }]}>
+                <Text style={s.fieldLabel}>COUNTRY</Text>
               </View>
               <TextInput
-                style={[styles.inputBox, styles.textInput]}
+                style={[s.inputBox, s.textInput, { backgroundColor: c.inputBg, borderColor: c.border, color: c.text }]}
                 placeholder="TYPE TO SEARCH..."
-                placeholderTextColor="#999"
+                placeholderTextColor={c.textSecondary}
                 value={showCountryList ? countrySearch : country || countrySearch}
                 onFocus={() => {
                   setShowCountryList(true);
@@ -178,17 +182,18 @@ export default function SetupScreen() {
                 }}
               />
               {showCountryList && (
-                <View style={styles.countryList}>
+                <View style={[s.countryList, { backgroundColor: c.card, borderColor: c.border }]}>
                   <FlatList
                     data={filteredCountries}
                     keyExtractor={(item) => item}
                     keyboardShouldPersistTaps="handled"
-                    style={styles.countryFlatList}
+                    style={s.countryFlatList}
                     renderItem={({ item }) => (
                       <TouchableOpacity
                         style={[
-                          styles.countryItem,
-                          item === country && styles.countryItemActive,
+                          s.countryItem,
+                          { borderBottomColor: c.background },
+                          item === country && { backgroundColor: c.yellow },
                         ]}
                         onPress={() => {
                           setCountry(item);
@@ -197,12 +202,7 @@ export default function SetupScreen() {
                           Keyboard.dismiss();
                         }}
                       >
-                        <Text
-                          style={[
-                            styles.countryItemText,
-                            item === country && styles.countryItemTextActive,
-                          ]}
-                        >
+                        <Text style={[s.countryItemText, { color: c.text }]}>
                           {item}
                         </Text>
                       </TouchableOpacity>
@@ -213,40 +213,42 @@ export default function SetupScreen() {
             </View>
 
             {/* Gender */}
-            <View style={styles.field}>
-              <View style={styles.labelCard}>
-                <Text style={styles.fieldLabel}>GENDER</Text>
+            <View style={s.field}>
+              <View style={[s.labelCard, { backgroundColor: c.green, borderColor: c.border }]}>
+                <Text style={s.fieldLabel}>GENDER</Text>
               </View>
-              <View style={styles.genderRow}>
+              <View style={s.genderRow}>
                 <TouchableOpacity
                   style={[
-                    styles.genderButton,
-                    gender === "male" && styles.genderButtonActive,
+                    s.genderButton,
+                    { backgroundColor: c.inputBg, borderColor: c.border },
+                    gender === "male" && { backgroundColor: c.yellow, shadowOffset: { width: 2, height: 2 }, transform: [{ translateX: 2 }, { translateY: 2 }] },
                   ]}
                   onPress={() => setGender("male")}
                 >
-                  <Text style={styles.genderButtonText}>MALE</Text>
+                  <Text style={[s.genderButtonText, { color: c.text }]}>MALE</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
-                    styles.genderButton,
-                    gender === "female" && styles.genderButtonActive,
+                    s.genderButton,
+                    { backgroundColor: c.inputBg, borderColor: c.border },
+                    gender === "female" && { backgroundColor: c.yellow, shadowOffset: { width: 2, height: 2 }, transform: [{ translateX: 2 }, { translateY: 2 }] },
                   ]}
                   onPress={() => setGender("female")}
                 >
-                  <Text style={styles.genderButtonText}>FEMALE</Text>
+                  <Text style={[s.genderButtonText, { color: c.text }]}>FEMALE</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
 
           <TouchableOpacity
-            style={[styles.startButton, !canCalculate && styles.startButtonDisabled]}
+            style={[s.startButton, { backgroundColor: c.buttonBg, borderColor: c.border }, !canCalculate && { backgroundColor: c.buttonDisabled, shadowOffset: { width: 2, height: 2 } }]}
             onPress={handleStart}
             disabled={!canCalculate}
             activeOpacity={0.9}
           >
-            <Text style={styles.startButtonText}>START</Text>
+            <Text style={[s.startButtonText, { color: c.buttonText }]}>START</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -254,208 +256,105 @@ export default function SetupScreen() {
   );
 }
 
-const BORDER = 3;
-const SHADOW = 5;
+function makeStyles(theme: Theme) {
+  const B = theme.border;
+  const S = theme.shadow;
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#e8e4de" },
-  container: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    justifyContent: "center",
-    paddingVertical: 24,
-  },
-  header: { alignItems: "center", marginBottom: 32 },
-  titleCard: {
-    backgroundColor: "#FF6B6B",
-    borderWidth: BORDER,
-    borderColor: "#000",
-    paddingHorizontal: 28,
-    paddingVertical: 14,
-    shadowColor: "#000",
-    shadowOffset: { width: SHADOW, height: SHADOW },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 5,
-    transform: [{ rotate: "-1deg" }],
-  },
-  title: {
-    fontSize: 40,
-    fontWeight: "900",
-    color: "#000",
-    textAlign: "center",
-    lineHeight: 44,
-  },
-  subtitle: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#000",
-    marginTop: 16,
-    textAlign: "center",
-    letterSpacing: 0.5,
-    lineHeight: 18,
-  },
-  form: { gap: 20, marginBottom: 28 },
-  field: {},
-  labelCard: {
-    backgroundColor: "#A8E6CF",
-    borderWidth: BORDER,
-    borderColor: "#000",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    alignSelf: "flex-start",
-    marginBottom: -BORDER,
-    zIndex: 2,
-    marginLeft: 12,
-  },
-  fieldLabel: {
-    fontSize: 13,
-    fontWeight: "900",
-    color: "#000",
-    letterSpacing: 1,
-  },
-  inputBox: {
-    backgroundColor: "#fff",
-    borderWidth: BORDER,
-    borderColor: "#000",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
-  },
-  textInput: { fontSize: 16, fontWeight: "700", color: "#000" },
-  inputText: { fontSize: 16, fontWeight: "700", color: "#000" },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 24,
-  },
-  modalCard: {
-    backgroundColor: "#e8e4de",
-    borderWidth: BORDER,
-    borderColor: "#000",
-    width: "100%",
-    shadowColor: "#000",
-    shadowOffset: { width: 6, height: 6 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 6,
-  },
-  modalTitleCard: {
-    backgroundColor: "#FF6B6B",
-    borderBottomWidth: BORDER,
-    borderBottomColor: "#000",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    alignItems: "center",
-  },
-  modalTitleText: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: "#000",
-    letterSpacing: 1,
-  },
-  spinnerPicker: { height: 180, backgroundColor: "#fff" },
-  modalButtons: {
-    flexDirection: "row",
-    borderTopWidth: BORDER,
-    borderTopColor: "#000",
-  },
-  modalCancelButton: {
-    flex: 1,
-    paddingVertical: 16,
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRightWidth: BORDER / 2,
-    borderRightColor: "#000",
-  },
-  modalConfirmButton: {
-    flex: 1,
-    paddingVertical: 16,
-    alignItems: "center",
-    backgroundColor: "#A8E6CF",
-    borderLeftWidth: BORDER / 2,
-    borderLeftColor: "#000",
-  },
-  modalButtonText: {
-    fontSize: 15,
-    fontWeight: "900",
-    color: "#000",
-    letterSpacing: 1,
-  },
-  countryList: {
-    backgroundColor: "#fff",
-    borderWidth: BORDER,
-    borderColor: "#000",
-    borderTopWidth: 0,
-    maxHeight: 180,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
-  },
-  countryFlatList: { maxHeight: 180 },
-  countryItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 2,
-    borderBottomColor: "#e8e4de",
-  },
-  countryItemActive: { backgroundColor: "#FFD93D" },
-  countryItemText: { fontSize: 15, fontWeight: "700", color: "#000" },
-  countryItemTextActive: { color: "#000" },
-  genderRow: { flexDirection: "row", gap: 12 },
-  genderButton: {
-    flex: 1,
-    paddingVertical: 16,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    borderWidth: BORDER,
-    borderColor: "#000",
-    shadowColor: "#000",
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
-  },
-  genderButtonActive: {
-    backgroundColor: "#FFD93D",
-    shadowOffset: { width: 2, height: 2 },
-    transform: [{ translateX: 2 }, { translateY: 2 }],
-  },
-  genderButtonText: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: "#000",
-    letterSpacing: 1,
-  },
-  startButton: {
-    backgroundColor: "#000",
-    paddingVertical: 20,
-    alignItems: "center",
-    borderWidth: BORDER,
-    borderColor: "#000",
-    shadowColor: "#000",
-    shadowOffset: { width: SHADOW, height: SHADOW },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 5,
-  },
-  startButtonDisabled: {
-    backgroundColor: "#bbb",
-    shadowOffset: { width: 2, height: 2 },
-  },
-  startButtonText: {
-    fontSize: 20,
-    fontWeight: "900",
-    color: "#fff",
-    letterSpacing: 2,
-  },
-});
+  return StyleSheet.create({
+    safe: { flex: 1 },
+    container: { flexGrow: 1, paddingHorizontal: 20, justifyContent: "center", paddingVertical: 24 },
+    header: { alignItems: "center", marginBottom: 32 },
+    titleCard: {
+      borderWidth: B,
+      paddingHorizontal: 28,
+      paddingVertical: 14,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: S, height: S },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 5,
+      transform: [{ rotate: "-1deg" }],
+    },
+    title: { fontSize: 40, fontWeight: "900", textAlign: "center", lineHeight: 44 },
+    subtitle: { fontSize: 11, fontWeight: "700", marginTop: 16, textAlign: "center", letterSpacing: 0.5, lineHeight: 18 },
+    form: { gap: 20, marginBottom: 28 },
+    field: {},
+    labelCard: {
+      borderWidth: B,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      alignSelf: "flex-start",
+      marginBottom: -B,
+      zIndex: 2,
+      marginLeft: 12,
+    },
+    fieldLabel: { fontSize: 13, fontWeight: "900", color: "#000", letterSpacing: 1 },
+    inputBox: {
+      borderWidth: B,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 4, height: 4 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 4,
+    },
+    textInput: { fontSize: 16, fontWeight: "700" },
+    inputText: { fontSize: 16, fontWeight: "700" },
+    modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", paddingHorizontal: 24 },
+    modalCard: {
+      borderWidth: B,
+      width: "100%",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 6, height: 6 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 6,
+    },
+    modalTitleCard: { borderBottomWidth: B, paddingVertical: 14, paddingHorizontal: 16, alignItems: "center" },
+    modalTitleText: { fontSize: 16, fontWeight: "900", color: "#000", letterSpacing: 1 },
+    spinnerPicker: { height: 180 },
+    modalButtons: { flexDirection: "row", borderTopWidth: B },
+    modalCancelButton: { flex: 1, paddingVertical: 16, alignItems: "center", borderRightWidth: B / 2 },
+    modalConfirmButton: { flex: 1, paddingVertical: 16, alignItems: "center", borderLeftWidth: B / 2 },
+    modalButtonText: { fontSize: 15, fontWeight: "900", color: "#000", letterSpacing: 1 },
+    countryList: {
+      borderWidth: B,
+      borderTopWidth: 0,
+      maxHeight: 180,
+      overflow: "hidden",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 4, height: 4 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 4,
+    },
+    countryFlatList: { maxHeight: 180 },
+    countryItem: { paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 2 },
+    countryItemText: { fontSize: 15, fontWeight: "700" },
+    genderRow: { flexDirection: "row", gap: 12 },
+    genderButton: {
+      flex: 1,
+      paddingVertical: 16,
+      alignItems: "center",
+      borderWidth: B,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 4, height: 4 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 4,
+    },
+    genderButtonText: { fontSize: 16, fontWeight: "900", letterSpacing: 1 },
+    startButton: {
+      paddingVertical: 20,
+      alignItems: "center",
+      borderWidth: B,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: S, height: S },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 5,
+    },
+    startButtonText: { fontSize: 20, fontWeight: "900", letterSpacing: 2 },
+  });
+}

@@ -74,9 +74,9 @@ export default function HomeScreen() {
 
       // Check if onboarding animation should show
       getSettings().then((s) => {
-        if (!(s ).onboardingSeen) {
+        if (!s.onboardingSeen) {
           setShowOnboarding(true);
-          saveSetting("onboardingSeen" as any, true);
+          saveSetting("onboardingSeen", true);
         }
       });
     });
