@@ -1,6 +1,8 @@
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { getWeeksRemaining, getTotalWeeks, getWeeksLived } from "./calculations";
+import { bluntMessages, gentleMessages, stoicMessages } from "../data/notificationMessages";
+import { getSettings } from "./settings";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -10,23 +12,11 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const MESSAGES = [
-  (weeks: number) => `${weeks.toLocaleString()} weeks left. What will you do with this one?`,
-  (weeks: number, lived: number) => `Week ${lived.toLocaleString()} of your life. Make it matter.`,
-  (weeks: number) => `${weeks.toLocaleString()} Mondays left. Start something today.`,
-  (weeks: number) => `Another week alive. ${weeks.toLocaleString()} more to fill with meaning.`,
-  (_w: number, _l: number, pct: number) => `You've lived ${pct.toFixed(0)}% of your life. The rest is up to you.`,
-  (weeks: number) => `${weeks.toLocaleString()} weeks. Not infinite. Not zero. Go.`,
-  (weeks: number) => `Time doesn't wait. ${weeks.toLocaleString()} weeks won't either.`,
-  (weeks: number) => `${weeks.toLocaleString()} weeks remain. What's the one thing that matters this week?`,
-  (_w: number, _l: number, pct: number) => `${(100 - pct).toFixed(0)}% of your life is unwritten. Write something worth reading.`,
-  (weeks: number) => `You have ${weeks.toLocaleString()} chances left to have the best week of your life.`,
-];
-
 function getMotivationalMessage(
   birthday: string,
   country: string,
-  gender: "male" | "female"
+  gender: "male" | "female",
+  tone: "blunt" | "gentle" | "stoic" = "blunt"
 ): string {
   const bday = new Date(birthday);
   const remaining = getWeeksRemaining(bday, country, gender);
@@ -34,8 +24,11 @@ function getMotivationalMessage(
   const total = getTotalWeeks(country, gender);
   const pct = (lived / total) * 100;
 
-  const index = Math.floor(Math.random() * MESSAGES.length);
-  return MESSAGES[index](remaining, lived, pct);
+  const messages =
+    tone === "gentle" ? gentleMessages : tone === "stoic" ? stoicMessages : bluntMessages;
+
+  const index = Math.floor(Math.random() * messages.length);
+  return messages[index](remaining, lived, pct);
 }
 
 export async function requestPermissions(): Promise<boolean> {
@@ -57,7 +50,8 @@ export async function scheduleWeeklyNotification(
 ): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
 
-  const message = getMotivationalMessage(birthday, country, gender);
+  const settings = await getSettings();
+  const message = getMotivationalMessage(birthday, country, gender, settings.notificationTone);
 
   await Notifications.scheduleNotificationAsync({
     content: {
