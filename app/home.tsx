@@ -13,6 +13,7 @@ import StreakBadge from "../components/StreakBadge";
 import OnboardingAnimation from "../components/OnboardingAnimation";
 import { updateWidget } from "../utils/widget";
 import type { Theme } from "../constants/theme";
+import { getAverageRating } from "../utils/journal";
 import {
   getWeeksLived,
   getWeeksRemaining,
@@ -44,6 +45,7 @@ export default function HomeScreen() {
   const [lastWeekIndex, setLastWeekIndex] = useState(0);
   const [streakData, setStreakData] = useState({ currentStreak: 0, longestStreak: 0, totalWeeksJournaled: 0 });
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [lastWeekScore, setLastWeekScore] = useState(0);
 
   useEffect(() => {
     getUserData().then((d) => {
@@ -61,6 +63,7 @@ export default function HomeScreen() {
       if (prevWeek >= 0) {
         getEntry(prevWeek).then((entry) => {
           setShowJournalPrompt(!entry);
+          if (entry) setLastWeekScore(getAverageRating(entry));
         });
       }
 
@@ -98,6 +101,12 @@ export default function HomeScreen() {
       <View style={s.container}>
         <View style={s.topBar}>
           <TouchableOpacity
+            style={[s.topButton, { backgroundColor: theme.colors.purple, borderColor: theme.colors.border }]}
+            onPress={() => { lightTap(); router.push("/vision"); }}
+          >
+            <Text style={s.topButtonTextDark}>MY VISION</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[s.topButton, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
             onPress={() => { lightTap(); router.push("/settings"); }}
           >
@@ -128,8 +137,8 @@ export default function HomeScreen() {
               onPress={() => { lightTap(); setJournalModalVisible(true); }}
               activeOpacity={0.9}
             >
-              <Text style={s.promptText}>WHAT DID YOU DO WITH LAST WEEK?</Text>
-              <Text style={s.promptSub}>TAP TO WRITE IT DOWN</Text>
+              <Text style={s.promptText}>WEEKLY CHECK-IN</Text>
+              <Text style={s.promptSub}>RATE YOUR WEEK · REFLECT · SET AN INTENTION</Text>
             </TouchableOpacity>
           )}
 
@@ -187,7 +196,7 @@ function makeStyles(theme: Theme) {
   return StyleSheet.create({
     safe: { flex: 1 },
     container: { flex: 1, paddingHorizontal: 20, paddingVertical: 12, justifyContent: "space-between" },
-    topBar: { flexDirection: "row", justifyContent: "flex-end" },
+    topBar: { flexDirection: "row", justifyContent: "space-between" },
     topButton: {
       borderWidth: B,
       paddingHorizontal: 14,
@@ -199,6 +208,7 @@ function makeStyles(theme: Theme) {
       elevation: 2,
     },
     topButtonText: { fontSize: 11, fontWeight: "900", letterSpacing: 1 },
+    topButtonTextDark: { fontSize: 11, fontWeight: "900", letterSpacing: 1, color: "#000" },
     center: { alignItems: "center", gap: 16 },
     promptCard: {
       borderWidth: B,
