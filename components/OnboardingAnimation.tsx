@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 
@@ -13,15 +13,18 @@ export default function OnboardingAnimation({ weeksRemaining, onComplete }: Prop
   const B = theme.border;
   const countAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const [displayValue, setDisplayValue] = useState(0);
 
   useEffect(() => {
-    // Count up to the weeks remaining number
+    const listenerId = countAnim.addListener(({ value }) => {
+      setDisplayValue(Math.round(value));
+    });
+
     Animated.timing(countAnim, {
       toValue: weeksRemaining,
       duration: 2500,
       useNativeDriver: false,
     }).start(() => {
-      // Hold for a moment, then fade out
       setTimeout(() => {
         Animated.timing(fadeAnim, {
           toValue: 0,
@@ -30,44 +33,22 @@ export default function OnboardingAnimation({ weeksRemaining, onComplete }: Prop
         }).start(onComplete);
       }, 1200);
     });
-  }, []);
 
-  const displayNumber = countAnim.interpolate({
-    inputRange: [0, weeksRemaining],
-    outputRange: [0, weeksRemaining],
-  });
+    return () => countAnim.removeListener(listenerId);
+  }, []);
 
   return (
     <Animated.View style={[styles.overlay, { backgroundColor: c.background, opacity: fadeAnim }]}>
       <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border, borderWidth: B }]}>
-        <AnimatedNumber value={displayNumber} style={[styles.bigNumber, { color: c.text }]} />
+        <Text style={[styles.bigNumber, { color: c.text }]}>
+          {displayValue.toLocaleString()}
+        </Text>
         <Text style={[styles.label, { color: c.text }]}>WEEKS LEFT</Text>
       </View>
       <View style={[styles.subtitleCard, { backgroundColor: c.yellow, borderColor: c.border, borderWidth: B }]}>
         <Text style={styles.subtitle}>MAKE THEM COUNT.</Text>
       </View>
     </Animated.View>
-  );
-}
-
-function AnimatedNumber({ value, style }: { value: Animated.AnimatedInterpolation<number>; style: any }) {
-  const textRef = useRef<any>(null);
-
-  useEffect(() => {
-    const id = value.addListener(({ value: v }) => {
-      if (textRef.current) {
-        textRef.current.setNativeProps({
-          text: Math.round(v).toLocaleString(),
-        });
-      }
-    });
-    return () => value.removeListener(id);
-  }, [value]);
-
-  return (
-    <Animated.Text ref={textRef} style={style}>
-      0
-    </Animated.Text>
   );
 }
 

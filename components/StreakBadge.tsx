@@ -4,9 +4,10 @@ import { useTheme } from "../contexts/ThemeContext";
 interface Props {
   currentStreak: number;
   totalJournaled: number;
+  longestStreak?: number;
 }
 
-export default function StreakBadge({ currentStreak, totalJournaled }: Props) {
+export default function StreakBadge({ currentStreak, totalJournaled, longestStreak }: Props) {
   const { theme } = useTheme();
   const c = theme.colors;
   const B = theme.border;
@@ -24,7 +25,7 @@ export default function StreakBadge({ currentStreak, totalJournaled }: Props) {
             {currentStreak} {currentStreak === 1 ? "WEEK" : "WEEKS"}
           </Text>
           <Text style={[styles.streakLabel, { color: c.textSecondary }]}>
-            STREAK · {totalJournaled} TOTAL
+            STREAK · {totalJournaled} TOTAL{longestStreak != null ? ` · LONGEST: ${longestStreak}` : ""}
           </Text>
         </View>
       </View>

@@ -13,21 +13,27 @@ export type MilestoneStore = Record<number, Milestone>;
 
 const FILE_PATH = `${FileSystem.documentDirectory}weeksleft_milestones.json`;
 
+let _cache: MilestoneStore | null = null;
+
 async function readStore(): Promise<MilestoneStore> {
+  if (_cache) return _cache;
   try {
     const raw = await FileSystem.readAsStringAsync(FILE_PATH);
-    return JSON.parse(raw);
+    _cache = JSON.parse(raw);
+    return _cache!;
   } catch {
-    return {};
+    _cache = {};
+    return _cache;
   }
 }
 
 async function writeStore(store: MilestoneStore): Promise<void> {
+  _cache = store;
   await FileSystem.writeAsStringAsync(FILE_PATH, JSON.stringify(store));
 }
 
 export async function getMilestones(): Promise<MilestoneStore> {
-  return readStore();
+  return { ...(await readStore()) };
 }
 
 export async function getMilestone(weekIndex: number): Promise<Milestone | null> {
