@@ -10,6 +10,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   ScrollView,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -22,6 +23,7 @@ export default function InputScreen() {
   const router = useRouter();
   const [birthday, setBirthday] = useState(new Date(1990, 0, 1));
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempDate, setTempDate] = useState(new Date(1990, 0, 1));
   const [country, setCountry] = useState("");
   const [countrySearch, setCountrySearch] = useState("");
   const [showCountryList, setShowCountryList] = useState(false);
@@ -34,8 +36,12 @@ export default function InputScreen() {
   }, [countrySearch]);
 
   const onDateChange = (date: Date) => {
-    if (Platform.OS === "android") setShowDatePicker(false);
-    setBirthday(date);
+    if (Platform.OS === "android") {
+      setShowDatePicker(false);
+      setBirthday(date);
+    } else {
+      setTempDate(date);
+    }
   };
 
   const canCalculate = country !== "";
@@ -85,41 +91,60 @@ export default function InputScreen() {
               <View style={styles.labelCard}>
                 <Text style={styles.fieldLabel}>BIRTHDAY</Text>
               </View>
-              {Platform.OS === "ios" ? (
-                <View style={styles.inputBox}>
+              <TouchableOpacity
+                style={styles.inputBox}
+                onPress={() => {
+                  setTempDate(birthday);
+                  setShowDatePicker(true);
+                }}
+                activeOpacity={0.9}
+              >
+                <Text style={styles.inputText}>{formatDate(birthday)}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Date Picker Modal */}
+            <Modal
+              visible={showDatePicker}
+              transparent
+              animationType="slide"
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalCard}>
+                  <View style={styles.modalTitleCard}>
+                    <Text style={styles.modalTitleText}>PICK YOUR BIRTHDAY</Text>
+                  </View>
                   <DateTimePicker
-                    value={birthday}
+                    value={tempDate}
                     mode="date"
-                    display="compact"
+                    display="spinner"
                     maximumDate={new Date()}
                     minimumDate={new Date(1900, 0, 1)}
                     onValueChange={onDateChange}
-                    style={styles.datePicker}
+                    style={styles.spinnerPicker}
                   />
+                  <View style={styles.modalButtons}>
+                    <TouchableOpacity
+                      style={styles.modalCancelButton}
+                      onPress={() => setShowDatePicker(false)}
+                      activeOpacity={0.9}
+                    >
+                      <Text style={styles.modalCancelText}>CANCEL</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.modalConfirmButton}
+                      onPress={() => {
+                        setBirthday(tempDate);
+                        setShowDatePicker(false);
+                      }}
+                      activeOpacity={0.9}
+                    >
+                      <Text style={styles.modalConfirmText}>DONE</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              ) : (
-                <>
-                  <TouchableOpacity
-                    style={styles.inputBox}
-                    onPress={() => setShowDatePicker(true)}
-                  >
-                    <Text style={styles.inputText}>
-                      {formatDate(birthday)}
-                    </Text>
-                  </TouchableOpacity>
-                  {showDatePicker && (
-                    <DateTimePicker
-                      value={birthday}
-                      mode="date"
-                      display="default"
-                      maximumDate={new Date()}
-                      minimumDate={new Date(1900, 0, 1)}
-                      onValueChange={onDateChange}
-                    />
-                  )}
-                </>
-              )}
-            </View>
+              </View>
+            </Modal>
 
             {/* Country */}
             <View style={[styles.field, { zIndex: 10 }]}>
@@ -325,9 +350,74 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#000",
   },
-  datePicker: {
-    alignSelf: "flex-start",
-    marginLeft: -8,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  modalCard: {
+    backgroundColor: "#e8e4de",
+    borderWidth: BORDER,
+    borderColor: "#000",
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 6, height: 6 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 6,
+  },
+  modalTitleCard: {
+    backgroundColor: "#FF6B6B",
+    borderBottomWidth: BORDER,
+    borderBottomColor: "#000",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: "center",
+  },
+  modalTitleText: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#000",
+    letterSpacing: 1,
+  },
+  spinnerPicker: {
+    height: 180,
+    backgroundColor: "#fff",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    borderTopWidth: BORDER,
+    borderTopColor: "#000",
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: 16,
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRightWidth: BORDER / 2,
+    borderRightColor: "#000",
+  },
+  modalCancelText: {
+    fontSize: 15,
+    fontWeight: "900",
+    color: "#000",
+    letterSpacing: 1,
+  },
+  modalConfirmButton: {
+    flex: 1,
+    paddingVertical: 16,
+    alignItems: "center",
+    backgroundColor: "#A8E6CF",
+    borderLeftWidth: BORDER / 2,
+    borderLeftColor: "#000",
+  },
+  modalConfirmText: {
+    fontSize: 15,
+    fontWeight: "900",
+    color: "#000",
+    letterSpacing: 1,
   },
   countryList: {
     backgroundColor: "#fff",
