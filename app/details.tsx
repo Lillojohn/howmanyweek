@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { View, TouchableOpacity, Text, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -6,8 +6,10 @@ import ProgressSummary from "../components/ProgressSummary";
 import WeekGridInteractive from "../components/WeekGridInteractive";
 import JournalModal from "../components/JournalModal";
 import MilestoneModal from "../components/MilestoneModal";
+import ShareCard from "../components/ShareCard";
 import { useTheme } from "../contexts/ThemeContext";
 import { lightTap } from "../utils/haptics";
+import { captureAndShare } from "../utils/share";
 import { getJournal, getJournaledWeeks } from "../utils/journal";
 import { getMilestoneWeeks, getAllMilestonesSorted } from "../utils/milestones";
 import { calculateStreaks } from "../utils/streaks";
@@ -51,6 +53,7 @@ export default function DetailsScreen() {
   const [journalModalVisible, setJournalModalVisible] = useState(false);
   const [milestoneModalVisible, setMilestoneModalVisible] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(0);
+  const shareRef = useRef<View>(null);
 
   const loadData = useCallback(async () => {
     const [weeks, msWeeks, msList, journal] = await Promise.all([
@@ -104,13 +107,22 @@ export default function DetailsScreen() {
             <Text style={{ fontSize: 14, fontWeight: "900", color: c.text, letterSpacing: 1 }}>BACK</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={{ backgroundColor: c.green, borderWidth: B, borderColor: c.border, paddingHorizontal: 16, paddingVertical: 10, shadowColor: c.shadow, shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 }}
-            onPress={handleThisWeek}
-            activeOpacity={0.9}
-          >
-            <Text style={{ fontSize: 14, fontWeight: "900", color: "#000", letterSpacing: 1 }}>THIS WEEK</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <TouchableOpacity
+              style={{ backgroundColor: c.yellow, borderWidth: B, borderColor: c.border, paddingHorizontal: 16, paddingVertical: 10, shadowColor: c.shadow, shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 }}
+              onPress={() => { lightTap(); captureAndShare(shareRef); }}
+              activeOpacity={0.9}
+            >
+              <Text style={{ fontSize: 14, fontWeight: "900", color: "#000", letterSpacing: 1 }}>SHARE</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ backgroundColor: c.green, borderWidth: B, borderColor: c.border, paddingHorizontal: 16, paddingVertical: 10, shadowColor: c.shadow, shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 }}
+              onPress={handleThisWeek}
+              activeOpacity={0.9}
+            >
+              <Text style={{ fontSize: 14, fontWeight: "900", color: "#000", letterSpacing: 1 }}>THIS WEEK</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <ProgressSummary
@@ -193,6 +205,17 @@ export default function DetailsScreen() {
           TAP A WEEK TO JOURNAL · LONG-PRESS TO ADD A MILESTONE
         </Text>
       </ScrollView>
+
+      {/* Hidden share card for capture */}
+      <View style={{ position: "absolute", left: -9999 }}>
+        <ShareCard
+          ref={shareRef}
+          weeksLived={weeksLived}
+          weeksRemaining={weeksRemaining}
+          totalWeeks={totalWeeks}
+          percentage={percentage}
+        />
+      </View>
 
       <JournalModal
         visible={journalModalVisible}

@@ -6,12 +6,14 @@ export interface AppSettings {
   theme: "light" | "dark" | "system";
   notificationTone: "blunt" | "gentle" | "stoic";
   hapticsEnabled: boolean;
+  onboardingSeen: boolean;
 }
 
 const DEFAULTS: AppSettings = {
   theme: "system",
   notificationTone: "blunt",
   hapticsEnabled: true,
+  onboardingSeen: false,
 };
 
 export async function getSettings(): Promise<AppSettings> {

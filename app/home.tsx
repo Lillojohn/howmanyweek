@@ -7,8 +7,10 @@ import { useTheme } from "../contexts/ThemeContext";
 import { lightTap } from "../utils/haptics";
 import { getEntry, getJournal } from "../utils/journal";
 import { calculateStreaks } from "../utils/streaks";
+import { getSettings, saveSetting } from "../utils/settings";
 import JournalModal from "../components/JournalModal";
 import StreakBadge from "../components/StreakBadge";
+import OnboardingAnimation from "../components/OnboardingAnimation";
 import type { Theme } from "../constants/theme";
 import {
   getWeeksLived,
@@ -40,6 +42,7 @@ export default function HomeScreen() {
   const [journalModalVisible, setJournalModalVisible] = useState(false);
   const [lastWeekIndex, setLastWeekIndex] = useState(0);
   const [streakData, setStreakData] = useState({ currentStreak: 0, longestStreak: 0, totalWeeksJournaled: 0 });
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     getUserData().then((d) => {
@@ -63,6 +66,14 @@ export default function HomeScreen() {
       // Load streak data
       getJournal().then((journal) => {
         setStreakData(calculateStreaks(journal, currentWeek));
+      });
+
+      // Check if onboarding animation should show
+      getSettings().then((s) => {
+        if (!(s ).onboardingSeen) {
+          setShowOnboarding(true);
+          saveSetting("onboardingSeen" as any, true);
+        }
       });
     });
     setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
@@ -152,6 +163,13 @@ export default function HomeScreen() {
           birthday={new Date(data.birthday)}
           onClose={() => setJournalModalVisible(false)}
           onSaved={() => setShowJournalPrompt(false)}
+        />
+      )}
+
+      {showOnboarding && data && (
+        <OnboardingAnimation
+          weeksRemaining={weeksRemaining}
+          onComplete={() => setShowOnboarding(false)}
         />
       )}
     </SafeAreaView>
